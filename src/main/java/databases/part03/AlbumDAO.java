@@ -1,5 +1,10 @@
 package databases.part03;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 
 import databases.part02.Artist;
@@ -35,6 +40,24 @@ public class AlbumDAO {
      *         sorted by AlbumId in ascending order.
      */
     public List<Album> getAlbumsByArtist(Artist artist) {
+
+        String sql = "SELECT AlbumId, Name FROM ArtistId WHERE ArtistId = ?";
+
+        try (Connection conn = DriverManager.getConnection(connectionString);
+            PreparedStatement preparedStatement = conn.prepareStatement(sql)){
+
+            preparedStatement.setLong(1, artist.getId());
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()){
+                if(resultSet.next()){
+                    String album = resultSet.getString("AlbumId");
+                    System.out.println(album);
+                }
+            }
+            }
+        catch (SQLException e){
+            e.printStackTrace();
+        }
         /*
          * hint: use the artist.getId() method to get the artist's id and add it to the
          * SQL query using PreparedStatement's setLong() method. See the previous hint
