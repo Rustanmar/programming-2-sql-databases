@@ -1,5 +1,11 @@
 package databases.part02;
 
+import java.sql.Connection;
+import java.sql.Driver;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,6 +49,21 @@ public class ArtistDAO {
          * to the database. You can't "hard code" the connection string, as that would
          * make tests run against your actual database, which may have unexpected data.
          */
+        String sql = "SELECT ArtistId, Name FROM Artist ORDER BY Name COLLATE NOCASE ASC";
+
+        try {
+            Connection conn = DriverManager.getConnection(connectionString);
+            PreparedStatement preparedStatement = conn.prepareStatement(sql);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()){
+                int id = resultSet.getInt("ArtistId");
+                String name = resultSet.getString("Name");
+                artists.add(new Artist(id, name));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
 
         return artists;
     }
@@ -56,21 +77,25 @@ public class ArtistDAO {
      *         that id.
      */
     public Artist getArtistById(long id) {
-        /*
-         * hint: use similar code to the getArtists() method above, but add a WHERE
-         * clause to the SQL query to only retrieve the artist with the specified id.
-         *
-         * The id can be added to the SQL query using PreparedStatement's setLong()
-         * method. For example: preparedStatement.setLong(1, id);
-         *
-         * You could also just call the getArtists() method above and iterate through
-         * the results until you find the artist with the specified id. This is less
-         * efficient, but it gets the job done and is easy to implement.
-         *
-         * Note that you must use the `connectionString` field in this class to connect
-         * to the database. You can't "hard code" the connection string, as that would
-         * make tests run against your actual database, which may have unexpected data.
-         */
+
+
+        String sql = "SELECT ArtistId, Name FROM Artist WHERE ArtistId = ?";
+
+        try (Connection conn = DriverManager.getConnection(connectionString);
+            PreparedStatement prepStatement = conn.prepareStatement(sql)) {
+
+            prepStatement.setLong(1, id);
+
+            try (ResultSet rs = prepStatement.executeQuery()) {
+                 if (rs.next()) {
+                     return new Artist(rs.getInt("ArtistId"), rs.getString("Name"));
+                 }
+            }
+        }
+        catch (SQLException e) {
+            e.printStackTrace();
+        }
+
         return null;
     }
 }
